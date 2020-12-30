@@ -18,7 +18,7 @@ enum MODE{
     eSlowBlink       //Slow blink
 }
 
-//% weight=100 color=#0fbc11 icon="\uf26e" block="DFRobot Capacitive Fingerprint"
+//% weight=100 color=#0fbc11 icon="\uf26e" block="DFRobotCapacitiveFingerprint"
 namespace custom {
     let header:number[] =[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     let readBuffer:number[]=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
@@ -48,6 +48,7 @@ namespace custom {
      * @brief Test whether the module connection is ok
     */
     //% block="Wait until is connected"
+    //% weight=100
     export function isConnected(): void {
         while(true){
             pack(CMD_TEST_CONNECTION,null,0);
@@ -73,6 +74,7 @@ namespace custom {
      * @return 0(succeed) or ERR_ID809
      */
     //%block="ctrl LED color %color mode %mode count %data"
+    //% weight=99
     export function ctrlLED(color:COLOR,mode:MODE,data:number):void{
         let buf=pins.createBuffer(4);
         buf[0]=mode;
@@ -93,6 +95,7 @@ namespace custom {
      * @return ture(Touched) or false(No touch)
      */
     //%block="detectFinger?"
+    //% weight=98
     export function detectFinger():boolean{
         let state=false;
         pack(CMD_FINGER_DETECT,null,0);
@@ -117,6 +120,7 @@ namespace custom {
      * @brief Fingerprint acquisition 
      */
     //%block="collection Fingerprint timeout %timeout (s)"
+    //% weight=97
     export function collectionFingerprint(timeout:number):void{
         let i=0,state=0,ret;
         if(_number > 2){
@@ -132,10 +136,12 @@ namespace custom {
         }
         if(state != 1){
             ret=getImage();
+            //serial.writeNumber(ret)
             if(ret != ERR_SUCCESS){
                 return;
             }
             ret=generate(_number);
+            //serial.writeNumber(ret)
             if(ret != ERR_SUCCESS){
                 //basic.showIcon(IconNames.No)
                // basic.pause(500);
@@ -151,6 +157,7 @@ namespace custom {
      * @return Successfully matched fingerprint ID, 0(Matching failed) or ERR_ID809
      */
     //%block="search"
+    //% weight=96
     export function search():number{
         let buf=pins.createBuffer(6)
         buf[2]=1;
@@ -176,6 +183,7 @@ namespace custom {
      * @return Successfully matched fingerprint ID, 0(Matching failed) or ERR_ID809
      */
     //%block="verify ID %ID"
+    //% weight=95
     export function verify(ID:number):boolean{
         let state=false;
         let buf=pins.createBuffer(4)
@@ -185,10 +193,13 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(50);
+        basic.pause(360);
         let ret = responsePayload();
         if(ret == ERR_SUCCESS){
-            //ret=readBuffer[0];
+            ret=header[10];
+            serial.writeNumber(ret)
+        }
+        if(ret==ID){
             state=true;
         }
         clearHeader();
@@ -200,6 +211,7 @@ namespace custom {
      * @return Registerable ID or ERR_ID809
      */
     //%block="get empty ID"
+    //% weight=94
     export function getEmptyID():number{
         let buf=pins.createBuffer(4)
         buf[0]=1;
@@ -208,10 +220,10 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(100);
+        basic.pause(460);
         let ret = responsePayload();
         if(ret == ERR_SUCCESS){
-            ret=readBuffer[0];
+            ret=header[10];
         }
         clearHeader();
         clearReadBuffer();
@@ -222,6 +234,7 @@ namespace custom {
      * @return 0(Registered), 1(Unregistered) or ERR_ID809
      */
     //%block="get Status ID %ID"
+    //% weight=93
     export function getStatusID(ID:number):boolean{
         let state=false;
         let buf=pins.createBuffer(2)
@@ -233,7 +246,7 @@ namespace custom {
         basic.pause(50);
         let ret = responsePayload();
         if(ret == ERR_SUCCESS){
-            ret=readBuffer[0];
+            ret=header[10];
         }
         if(ret == 0){
             state=true;
@@ -247,6 +260,7 @@ namespace custom {
      * @return Number of registered users or ERR_ID809
      */
     //%block="get enroll count"
+    //% weight=92
     export function getEnrollCount():number{
         let buf=pins.createBuffer(4)
         buf[0]=1;
@@ -258,7 +272,7 @@ namespace custom {
         basic.pause(80);
         let ret = responsePayload();
         if(ret == ERR_SUCCESS){
-            ret=readBuffer[0];
+            ret=header[10];
         }
         clearHeader();
         clearReadBuffer();
@@ -269,8 +283,9 @@ namespace custom {
      * @param Fingerprint ID
      */
     //%block="store fingerprint %ID"
+    //% weight=91
     export function storeFingerprint(ID:number):void{
-        let buf=pins.createBuffer(4)
+        let buf=pins.createBuffer(4);
         let ret;
         ret = merge();
         if(ret != ERR_SUCCESS) {
@@ -285,7 +300,7 @@ namespace custom {
         basic.pause(360);
         ret = responsePayload();
         if(ret == ERR_SUCCESS){
-            ret=readBuffer[0];
+            ret=header[10];
         }
         clearHeader();
         clearReadBuffer();
@@ -295,6 +310,7 @@ namespace custom {
      * @param Delete ID or DELALL(delete all)
      */
     //%block="delete fingerprint %ID"
+    //% weight=90
     export function delFingerprint(ID:number):void{
         let buf=pins.createBuffer(4)
         if(ID==DELALL){
@@ -312,7 +328,7 @@ namespace custom {
         basic.pause(360);
         let ret = responsePayload();
         if(ret == ERR_SUCCESS){
-            ret=readBuffer[0];
+            ret=header[10];
         }
         clearHeader();
         clearReadBuffer();
@@ -335,11 +351,11 @@ namespace custom {
         let cks = getCmdCKS(len);
         header[24]=cks&0xff;
         header[25]=cks>>8;
-        /*
+        
         serial.writeString("header1:")
         for(let i=0;i<26;i++){
             serial.writeNumber(header[i]);
-        }*/
+        }
     }
 
     function getCmdCKS(len:number):number{
@@ -385,11 +401,11 @@ namespace custom {
         let ret=(header[8]|header[9]<<8)&0xff
         //serial.writeString("ret:")
         //serial.writeNumber(ret);
-        /*
+        
         serial.writeString("header2:")
         for(let i=0; i<26;i++){
             serial.writeNumber(header[i]);
-        }*/
+        }
         _error = ret;
         if(ret != ERR_SUCCESS){
             ret=ERR_ID809;
