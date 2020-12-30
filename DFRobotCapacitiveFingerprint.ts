@@ -30,7 +30,19 @@ namespace custom {
     const ERR_SUCCESS=0x00
     const CMD_SLED_CTRL=0x0024
     const CMD_FINGER_DETECT=0x0021
-    let _error
+    const CMD_GET_IMAGE=0x0020
+    const CMD_GENERATE=0x0060
+    const FINGERPRINT_CAPACITY=80
+    const CMD_SEARCH=0x0063
+    const CMD_VERIFY=0x0064
+    const CMD_GET_EMPTY_ID=0x0045
+    const CMD_GET_STATUS=0x0046
+    const CMD_GET_ENROLL_COUNT=0x0048
+    const CMD_MERGE=0x0061
+    const CMD_STORE_CHAR=0x0040
+    const DELALL=0xff
+    const CMD_DEL_CHAR=0x0044
+    let _error,_number=0
 
     /**
      * @brief Test whether the module connection is ok
@@ -100,9 +112,211 @@ namespace custom {
             state=true;
         }
         return state;
-  }
+    }
+    /**
+     * @brief Fingerprint acquisition 
+     */
+    //%block="collection Fingerprint timeout %timeout (s)"
+    export function collectionFingerprint(timeout:number):void{
+        let i=0,state=0,ret;
+        if(_number > 2){
+            _error=69;
+            return;
+        }
+        while(!detectFinger()){
+            basic.pause(100);
+            if(++i > timeout*10){
+                state=1;
+                break;
+            }
+        }
+        if(state != 1){
+            ret=getImage();
+            if(ret != ERR_SUCCESS){
+                return;
+            }
+            ret=generate(_number);
+            if(ret != ERR_SUCCESS){
+                //basic.showIcon(IconNames.No)
+               // basic.pause(500);
+                //basic.clearScreen();
+                return;
+            }
+            _number++;
+        }
+    }
 
-
+    /**
+     * @brief Match the fingerprint with all fingeprints 
+     * @return Successfully matched fingerprint ID, 0(Matching failed) or ERR_ID809
+     */
+    //%block="search"
+    export function search():number{
+        let buf=pins.createBuffer(6)
+        buf[2]=1;
+        buf[4]=FINGERPRINT_CAPACITY;
+        _number=0;
+        pack(CMD_SEARCH,buf,6);
+        let Buffer = pins.createBufferFromArray(header);
+        pins.i2cWriteBuffer(Addr, Buffer);
+        clearHeader();
+        basic.pause(1000);
+        let ret = responsePayload();
+        if(ret == ERR_SUCCESS){
+            ret=readBuffer[0];
+        }else{
+            ret=0;
+        }
+        clearHeader();
+        clearReadBuffer();
+        return ret;
+    }
+    /**
+     * @brief Match the fingerprint with specific fingerprint 
+     * @return Successfully matched fingerprint ID, 0(Matching failed) or ERR_ID809
+     */
+    //%block="verify ID %ID"
+    export function verify(ID:number):boolean{
+        let state=false;
+        let buf=pins.createBuffer(4)
+        buf[0]=ID;
+        _number=0;
+        pack(CMD_VERIFY,buf,4);
+        let Buffer = pins.createBufferFromArray(header);
+        pins.i2cWriteBuffer(Addr, Buffer);
+        clearHeader();
+        basic.pause(1000);
+        let ret = responsePayload();
+        if(ret == ERR_SUCCESS){
+            //ret=readBuffer[0];
+            state=true;
+        }
+        clearHeader();
+        clearReadBuffer();
+        return state;
+    }
+    /**
+     * @brief Get the first registerable ID 
+     * @return Registerable ID or ERR_ID809
+     */
+    //%block="get empty ID"
+    export function getEmptyID():number{
+        let buf=pins.createBuffer(4)
+        buf[0]=1;
+        buf[2]=FINGERPRINT_CAPACITY;
+        pack(CMD_GET_EMPTY_ID,buf,4);
+        let Buffer = pins.createBufferFromArray(header);
+        pins.i2cWriteBuffer(Addr, Buffer);
+        clearHeader();
+        basic.pause(1000);
+        let ret = responsePayload();
+        if(ret == ERR_SUCCESS){
+            ret=readBuffer[0];
+        }
+        clearHeader();
+        clearReadBuffer();
+        return ret;
+    }
+    /**
+     * @brief Check if the ID has been registered 
+     * @return 0(Registered), 1(Unregistered) or ERR_ID809
+     */
+    //%block="get Status ID %ID"
+    export function getStatusID(ID:number):boolean{
+        let state=false;
+        let buf=pins.createBuffer(2)
+        buf[0]=ID;
+        pack(CMD_GET_STATUS,buf,2);
+        let Buffer = pins.createBufferFromArray(header);
+        pins.i2cWriteBuffer(Addr, Buffer);
+        clearHeader();
+        basic.pause(1000);
+        let ret = responsePayload();
+        if(ret == ERR_SUCCESS){
+            ret=readBuffer[0];
+        }
+        if(ret == 0){
+            state=true;
+        }
+        clearHeader();
+        clearReadBuffer();
+        return state;
+    }
+    /**
+     * @brief Get the number of registered users 
+     * @return Number of registered users or ERR_ID809
+     */
+    //%block="get enroll count"
+    export function getEnrollCount():number{
+        let buf=pins.createBuffer(4)
+        buf[0]=1;
+        buf[2]=FINGERPRINT_CAPACITY;
+        pack(CMD_GET_ENROLL_COUNT,buf,4);
+        let Buffer = pins.createBufferFromArray(header);
+        pins.i2cWriteBuffer(Addr, Buffer);
+        clearHeader();
+        basic.pause(1000);
+        let ret = responsePayload();
+        if(ret == ERR_SUCCESS){
+            ret=readBuffer[0];
+        }
+        clearHeader();
+        clearReadBuffer();
+        return ret;
+    }
+    /**
+     * @brief Save fingerprint 
+     * @param Fingerprint ID
+     */
+    //%block="store fingerprint %ID"
+    export function storeFingerprint(ID:number):void{
+        let buf=pins.createBuffer(4)
+        let ret;
+        ret = merge();
+        if(ret != ERR_SUCCESS) {
+            return;
+        }
+        _number=0;
+        buf[0]=ID;
+        pack(CMD_STORE_CHAR,buf,4);
+        let Buffer = pins.createBufferFromArray(header);
+        pins.i2cWriteBuffer(Addr, Buffer);
+        clearHeader();
+        basic.pause(1000);
+        ret = responsePayload();
+        if(ret == ERR_SUCCESS){
+            ret=readBuffer[0];
+        }
+        clearHeader();
+        clearReadBuffer();
+    }
+    /**
+     * @brief Delete fingerprint 
+     * @param Delete ID or DELALL(delete all)
+     */
+    //%block="delete fingerprint %ID"
+    export function delFingerprint(ID:number):void{
+        let buf=pins.createBuffer(4)
+        if(ID==DELALL){
+            buf[0]=1;
+            buf[2]=FINGERPRINT_CAPACITY;
+        }else{
+            buf[0]=buf[2]=ID;
+        }
+        buf[0]=1;
+        buf[2]=FINGERPRINT_CAPACITY;
+        pack(CMD_DEL_CHAR,buf,4);
+        let Buffer = pins.createBufferFromArray(header);
+        pins.i2cWriteBuffer(Addr, Buffer);
+        clearHeader();
+        basic.pause(1000);
+        let ret = responsePayload();
+        if(ret == ERR_SUCCESS){
+            ret=readBuffer[0];
+        }
+        clearHeader();
+        clearReadBuffer();
+    }
 
     function pack(cmd:number, payload:Buffer,len:number):void{
         header[0]=0x55;
@@ -121,10 +335,11 @@ namespace custom {
         let cks = getCmdCKS(len);
         header[24]=cks&0xff;
         header[25]=cks>>8;
+        /*
         serial.writeString("header1:")
         for(let i=0;i<26;i++){
             serial.writeNumber(header[i]);
-        }
+        }*/
     }
 
     function getCmdCKS(len:number):number{
@@ -170,10 +385,11 @@ namespace custom {
         let ret=(header[8]|header[9]<<8)&0xff
         //serial.writeString("ret:")
         //serial.writeNumber(ret);
+        /*
         serial.writeString("header2:")
         for(let i=0; i<26;i++){
             serial.writeNumber(header[i]);
-        }
+        }*/
         _error = ret;
         if(ret != ERR_SUCCESS){
             ret=ERR_ID809;
@@ -296,5 +512,45 @@ namespace custom {
         //serial.writeNumber(cks);
         return cks;
     }
+    function getImage():number{
+        let ret;
+        pack(CMD_GET_IMAGE,null,0);
+        let Buffer = pins.createBufferFromArray(header);
+        pins.i2cWriteBuffer(Addr, Buffer);
+        clearHeader();
+        basic.pause(1000);
+        ret = responsePayload();
+        clearHeader();
+        clearReadBuffer();
+        return ret;
+    }
+    function generate(RamBufferID:number):number{
+        let ret;
+        let buf=pins.createBuffer(2);
+        buf[0]=RamBufferID;
+        pack(CMD_GENERATE,buf,2);
+        let Buffer = pins.createBufferFromArray(header);
+        pins.i2cWriteBuffer(Addr, Buffer);
+        clearHeader();
+        basic.pause(1000);
+        ret = responsePayload();
+        clearHeader();
+        clearReadBuffer();
+        return ret;
+    }
 
+    function merge():number{
+        let ret;
+        let buf=pins.createBuffer(3);
+        buf[2]=_number;
+        pack(CMD_MERGE,buf,3);
+        let Buffer = pins.createBufferFromArray(header);
+        pins.i2cWriteBuffer(Addr, Buffer);
+        clearHeader();
+        basic.pause(1000);
+        ret = responsePayload();
+        clearHeader();
+        clearReadBuffer();
+        return ret;
+    }
 }
