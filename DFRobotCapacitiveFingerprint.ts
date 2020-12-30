@@ -54,7 +54,7 @@ namespace custom {
             let Buffer = pins.createBufferFromArray(header);
             pins.i2cWriteBuffer(Addr, Buffer);
             clearHeader();
-            basic.pause(1000);
+            basic.pause(50);
             let ret = responsePayload();
             clearHeader();
             clearReadBuffer();
@@ -82,7 +82,7 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(1000);
+        basic.pause(50);
         let buffer = pins.createBuffer(20);
         let ret = responsePayload();
         clearHeader();
@@ -99,7 +99,7 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(1000);
+        basic.pause(240);
         let ret = responsePayload();
         if(ret == ERR_SUCCESS) {
             ret = readBuffer[0];
@@ -124,7 +124,7 @@ namespace custom {
             return;
         }
         while(!detectFinger()){
-            basic.pause(100);
+            basic.pause(10);
             if(++i > timeout*10){
                 state=1;
                 break;
@@ -160,7 +160,7 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(1000);
+        basic.pause(360);
         let ret = responsePayload();
         if(ret == ERR_SUCCESS){
             ret=readBuffer[0];
@@ -185,7 +185,7 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(1000);
+        basic.pause(50);
         let ret = responsePayload();
         if(ret == ERR_SUCCESS){
             //ret=readBuffer[0];
@@ -208,7 +208,7 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(1000);
+        basic.pause(100);
         let ret = responsePayload();
         if(ret == ERR_SUCCESS){
             ret=readBuffer[0];
@@ -230,7 +230,7 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(1000);
+        basic.pause(50);
         let ret = responsePayload();
         if(ret == ERR_SUCCESS){
             ret=readBuffer[0];
@@ -255,7 +255,7 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(1000);
+        basic.pause(80);
         let ret = responsePayload();
         if(ret == ERR_SUCCESS){
             ret=readBuffer[0];
@@ -282,7 +282,7 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(1000);
+        basic.pause(360);
         ret = responsePayload();
         if(ret == ERR_SUCCESS){
             ret=readBuffer[0];
@@ -309,7 +309,7 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(1000);
+        basic.pause(360);
         let ret = responsePayload();
         if(ret == ERR_SUCCESS){
             ret=readBuffer[0];
@@ -518,7 +518,7 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(1000);
+        basic.pause(360);
         ret = responsePayload();
         clearHeader();
         clearReadBuffer();
@@ -532,7 +532,7 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(1000);
+        basic.pause(360);
         ret = responsePayload();
         clearHeader();
         clearReadBuffer();
@@ -547,7 +547,7 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(1000);
+        basic.pause(360);
         ret = responsePayload();
         clearHeader();
         clearReadBuffer();
