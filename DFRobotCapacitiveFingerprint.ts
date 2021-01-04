@@ -56,7 +56,7 @@ namespace custom {
             pins.i2cWriteBuffer(Addr, Buffer);
             clearHeader();
             basic.pause(50);
-            let ret = responsePayload();
+            let ret = responsePayload(CMD_TEST_CONNECTION);
             clearHeader();
             clearReadBuffer();
             if(ret == ERR_SUCCESS){
@@ -86,7 +86,7 @@ namespace custom {
         clearHeader();
         basic.pause(50);
         let buffer = pins.createBuffer(20);
-        let ret = responsePayload();
+        let ret = responsePayload(CMD_SLED_CTRL);
         clearHeader();
         clearReadBuffer();
     }
@@ -103,7 +103,7 @@ namespace custom {
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
         basic.pause(240);
-        let ret = responsePayload();
+        let ret = responsePayload(CMD_FINGER_DETECT);
         if(ret == ERR_SUCCESS) {
             ret = readBuffer[0];
             //serial.writeString("aa:")
@@ -127,28 +127,38 @@ namespace custom {
             _error=69;
             return;
         }
-        while(!detectFinger()){
-            basic.pause(10);
-            if(++i > timeout*10){
-                state=1;
-                break;
+        while(1){
+            while(!detectFinger()){
+                basic.pause(10);
+                if(++i > timeout*10){
+                    state=1;
+                    ctrlLED(COLOR.eLEDRed, MODE.eFastBlink, 1)
+                    return;
+                }
             }
-        }
-        if(state != 1){
-            ret=getImage();
-            //serial.writeNumber(ret)
-            if(ret != ERR_SUCCESS){
+            serial.writeString("okokoko:")
+            if(state != 1){
+                ret=getImage();
+                serial.writeString("stat1:")
+                serial.writeNumber(ret)
+                if(ret != ERR_SUCCESS){
+                    ctrlLED(COLOR.eLEDRed, MODE.eFastBlink, 1)
+                    continue;
+                }
+                ret=generate(_number);
+                serial.writeString("stat2:")
+                serial.writeNumber(ret)
+                if(ret != ERR_SUCCESS){
+                    //basic.showIcon(IconNames.No)
+                // basic.pause(500);
+                    //basic.clearScreen();
+                    ctrlLED(COLOR.eLEDRed, MODE.eFastBlink, 1)
+                    continue;
+                }
+                _number++;
+                ctrlLED(COLOR.eLEDGreen, MODE.eFastBlink, 1)
                 return;
             }
-            ret=generate(_number);
-            //serial.writeNumber(ret)
-            if(ret != ERR_SUCCESS){
-                //basic.showIcon(IconNames.No)
-               // basic.pause(500);
-                //basic.clearScreen();
-                return;
-            }
-            _number++;
         }
     }
 
@@ -168,7 +178,7 @@ namespace custom {
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
         basic.pause(360);
-        let ret = responsePayload();
+        let ret = responsePayload(CMD_SEARCH);
         if(ret == ERR_SUCCESS){
             ret=readBuffer[0];
         }else{
@@ -193,8 +203,8 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(360);
-        let ret = responsePayload();
+        basic.pause(50);
+        let ret = responsePayload(CMD_VERIFY);
         if(ret == ERR_SUCCESS){
             ret=header[10];
             serial.writeNumber(ret)
@@ -221,7 +231,7 @@ namespace custom {
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
         basic.pause(460);
-        let ret = responsePayload();
+        let ret = responsePayload(CMD_GET_EMPTY_ID);
         if(ret == ERR_SUCCESS){
             ret=header[10];
         }
@@ -244,7 +254,7 @@ namespace custom {
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
         basic.pause(50);
-        let ret = responsePayload();
+        let ret = responsePayload(CMD_GET_STATUS);
         if(ret == ERR_SUCCESS){
             ret=header[10];
         }
@@ -270,7 +280,7 @@ namespace custom {
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
         basic.pause(80);
-        let ret = responsePayload();
+        let ret = responsePayload(CMD_GET_ENROLL_COUNT);
         if(ret == ERR_SUCCESS){
             ret=header[10];
         }
@@ -298,7 +308,7 @@ namespace custom {
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
         basic.pause(360);
-        ret = responsePayload();
+        ret = responsePayload(CMD_STORE_CHAR);
         if(ret == ERR_SUCCESS){
             ret=header[10];
         }
@@ -326,7 +336,7 @@ namespace custom {
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
         basic.pause(360);
-        let ret = responsePayload();
+        let ret = responsePayload(CMD_DEL_CHAR);
         if(ret == ERR_SUCCESS){
             ret=header[10];
         }
@@ -384,8 +394,17 @@ namespace custom {
         }
     }
 
-    function responsePayload():number{
+    function responsePayload(cmd:number):number{
+        let state =0;
         let nType = readPrefix();
+        while(cmd!=header[4]){
+            nType = readPrefix();
+            basic.pause(100);
+            state++;
+            if(state==5){
+                break;
+            }
+        }
         if(nType ==1){
             serial.writeString("--recv timeout--")
             _error = 70;
@@ -407,18 +426,18 @@ namespace custom {
             serial.writeNumber(header[i]);
         }
         _error = ret;
-        if(ret != ERR_SUCCESS){
-            ret=ERR_ID809;
-        }else if(datCount != 16){
-            _error = 66;
-            ret = ERR_ID809;
-        }else if(getRcmCKS() != cks){
-            _error = 67;
-            ret = ERR_ID809;
-        }else{
-        }
-        //serial.writeString("ret:")
-        //serial.writeNumber(ret);
+        
+            if(ret != ERR_SUCCESS){
+                ret=ERR_ID809;
+            }else if(datCount != 16){
+                _error = 66;
+                ret = ERR_ID809;
+            }else if(getRcmCKS() != cks){
+                _error = 67;
+                ret = ERR_ID809;
+            }else{
+            }
+       
         return ret;
     }
 
@@ -431,8 +450,6 @@ namespace custom {
         let state = RECV_HEADER_INIT
         let curr=input.runningTimeMicros();
         while(state != RECV_HEADER_OK){
-            let buf=pins.createBuffer(1);
-            
             if(readN(1) != 1){
                 return 1;
             }
@@ -460,7 +477,7 @@ namespace custom {
                 } else if(readBuffer[0] == 0xA5) {
                     state = RECV_HEADER_A5;
                 }
-                if(input.runningTimeMicros() - curr > 20000) {
+                if(input.runningTimeMicros() - curr > 2000) {
                     serial.writeString("----------!!!!!!!!!recv timeout----------");
                     return 1;
                 }  
@@ -535,7 +552,7 @@ namespace custom {
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
         basic.pause(360);
-        ret = responsePayload();
+        ret = responsePayload(CMD_GET_IMAGE);
         clearHeader();
         clearReadBuffer();
         return ret;
@@ -549,7 +566,7 @@ namespace custom {
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
         basic.pause(360);
-        ret = responsePayload();
+        ret = responsePayload(CMD_GENERATE);
         clearHeader();
         clearReadBuffer();
         return ret;
@@ -564,7 +581,7 @@ namespace custom {
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
         basic.pause(360);
-        ret = responsePayload();
+        ret = responsePayload(CMD_MERGE);
         clearHeader();
         clearReadBuffer();
         return ret;
