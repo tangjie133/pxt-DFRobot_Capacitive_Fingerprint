@@ -1,5 +1,5 @@
 {
-    "name": "pxt-DFRobot_Capacitive_Fingerprint",
+    "name": "CapacitiveFingerprint",
     "version": "0.0.4",
     "description": "",
     "dependencies": {
