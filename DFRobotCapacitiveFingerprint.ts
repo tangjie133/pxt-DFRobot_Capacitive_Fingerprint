@@ -18,7 +18,7 @@ enum MODE{
     eSlowBlink       //Slow blink
 }
 
-//% weight=100 color=#0fbc11 icon="\uf26e" block="DFRobotCapacitiveFingerprint"
+//% weight=100 color=#0fbc11 icon="\uf26e" block="Capacitive Fingerprint"
 namespace custom {
     let header:number[] =[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     let readBuffer:number[]=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
@@ -42,11 +42,11 @@ namespace custom {
     const CMD_STORE_CHAR=0x0040
     const DELALL=0xff
     const CMD_DEL_CHAR=0x0044
-    let _error,_number=0
+    let _error,_number=0,_state=0,_initState=0
 
     /**
-     * @brief Test whether the module connection is ok
-    */
+     *Test whether the module connection is ok
+     */
     //% block="Wait until is connected"
     //% weight=100
     export function isConnected(): void {
@@ -66,12 +66,12 @@ namespace custom {
     }
 
     /**
-     * @brief Set LED
-     * @param mode:in typedef enum eLEDMode_t
-     * @param color:in typedef enum eLEDColor_t
-     * @param blink Count: 00 represents blinking all the time
-     * @This parameter will only be valid in mode eBreathing, eFastBlink, eSlowBlink
-     * @return 0(succeed) or ERR_ID809
+     * Set LED
+     * mode:in typedef enum eLEDMode_t
+     * color:in typedef enum eLEDColor_t
+     * blink Count: 00 represents blinking all the time
+     * parameter will only be valid in mode eBreathing, eFastBlink, eSlowBlink
+     * return 0(succeed) or ERR_ID809
      */
     //%block="ctrl LED color %color mode %mode count %data"
     //% weight=99
@@ -91,8 +91,8 @@ namespace custom {
         clearReadBuffer();
     }
     /**
-     * @brief Detect if there is finger touched 
-     * @return ture(Touched) or false(No touch)
+     * Detect if there is finger touched 
+     * return ture(Touched) or false(No touch)
      */
     //%block="detectFinger?"
     //% weight=98
@@ -117,7 +117,7 @@ namespace custom {
         return state;
     }
     /**
-     * @brief Fingerprint acquisition 
+     * Fingerprint acquisition 
      */
     //%block="collection Fingerprint timeout %timeout (s)"
     //% weight=97
@@ -132,6 +132,7 @@ namespace custom {
                 basic.pause(10);
                 if(++i > timeout*10){
                     state=1;
+                    _state=0;
                     ctrlLED(COLOR.eLEDRed, MODE.eFastBlink, 1)
                     return;
                 }
@@ -139,86 +140,101 @@ namespace custom {
             serial.writeString("okokoko:")
             if(state != 1){
                 ret=getImage();
-                serial.writeString("stat1:")
-                serial.writeNumber(ret)
+                //serial.writeString("stat1:")
+                //serial.writeNumber(ret)
                 if(ret != ERR_SUCCESS){
                     ctrlLED(COLOR.eLEDRed, MODE.eFastBlink, 1)
+                    _state=0;
                     continue;
                 }
                 ret=generate(_number);
-                serial.writeString("stat2:")
-                serial.writeNumber(ret)
+                //serial.writeString("stat2:")
+                //serial.writeNumber(ret)
                 if(ret != ERR_SUCCESS){
                     //basic.showIcon(IconNames.No)
                 // basic.pause(500);
                     //basic.clearScreen();
                     ctrlLED(COLOR.eLEDRed, MODE.eFastBlink, 1)
+                    _state=0;
                     continue;
                 }
                 _number++;
-                ctrlLED(COLOR.eLEDGreen, MODE.eFastBlink, 1)
+                if(_initState < 3){
+                    _initState++;
+                    ctrlLED(COLOR.eLEDGreen, MODE.eFastBlink, 1)
+                }
+                _state=1;
                 return;
             }
         }
     }
 
     /**
-     * @brief Match the fingerprint with all fingeprints 
-     * @return Successfully matched fingerprint ID, 0(Matching failed) or ERR_ID809
+     * Match the fingerprint with all fingeprints 
+     * return Successfully matched fingerprint ID, 0(Matching failed) or ERR_ID809
      */
     //%block="search"
     //% weight=96
     export function search():number{
-        let buf=pins.createBuffer(6)
-        buf[2]=1;
-        buf[4]=FINGERPRINT_CAPACITY;
-        _number=0;
-        pack(CMD_SEARCH,buf,6);
-        let Buffer = pins.createBufferFromArray(header);
-        pins.i2cWriteBuffer(Addr, Buffer);
-        clearHeader();
-        basic.pause(360);
-        let ret = responsePayload(CMD_SEARCH);
-        if(ret == ERR_SUCCESS){
-            ret=readBuffer[0];
+        let ret
+        if(_state==1){
+            let buf=pins.createBuffer(6)
+            buf[2]=1;
+            buf[4]=FINGERPRINT_CAPACITY;
+            _number=0;
+            pack(CMD_SEARCH,buf,6);
+            let Buffer = pins.createBufferFromArray(header);
+            pins.i2cWriteBuffer(Addr, Buffer);
+            clearHeader();
+            basic.pause(360);
+            ret = responsePayload(CMD_SEARCH);
+            if(ret == ERR_SUCCESS){
+                ret=readBuffer[0];
+            }else{
+                ret=0;
+            }
+            clearHeader();
+            clearReadBuffer();
         }else{
-            ret=0;
+            ret=0xff; 
         }
-        clearHeader();
-        clearReadBuffer();
         return ret;
     }
     /**
-     * @brief Match the fingerprint with specific fingerprint 
-     * @return Successfully matched fingerprint ID, 0(Matching failed) or ERR_ID809
+     * Match the fingerprint with specific fingerprint 
+     * return Successfully matched fingerprint ID, 0(Matching failed) or ERR_ID809
      */
     //%block="verify ID %ID"
     //% weight=95
     export function verify(ID:number):boolean{
         let state=false;
         let buf=pins.createBuffer(4)
-        buf[0]=ID;
-        _number=0;
-        pack(CMD_VERIFY,buf,4);
-        let Buffer = pins.createBufferFromArray(header);
-        pins.i2cWriteBuffer(Addr, Buffer);
-        clearHeader();
-        basic.pause(50);
-        let ret = responsePayload(CMD_VERIFY);
-        if(ret == ERR_SUCCESS){
-            ret=header[10];
-            serial.writeNumber(ret)
+        if(_state==1){
+            buf[0]=ID;
+            _number=0;
+            pack(CMD_VERIFY,buf,4);
+            let Buffer = pins.createBufferFromArray(header);
+            pins.i2cWriteBuffer(Addr, Buffer);
+            clearHeader();
+            basic.pause(50);
+            let ret = responsePayload(CMD_VERIFY);
+            if(ret == ERR_SUCCESS){
+                ret=header[10];
+                serial.writeNumber(ret)
+            }
+            if(ret==ID){
+                state=true;
+            }
+            clearHeader();
+            clearReadBuffer();
+        }else{
+            state=false
         }
-        if(ret==ID){
-            state=true;
-        }
-        clearHeader();
-        clearReadBuffer();
         return state;
     }
     /**
-     * @brief Get the first registerable ID 
-     * @return Registerable ID or ERR_ID809
+     * Get the first registerable ID 
+     * return Registerable ID or ERR_ID809
      */
     //%block="get empty ID"
     //% weight=94
@@ -240,8 +256,8 @@ namespace custom {
         return ret;
     }
     /**
-     * @brief Check if the ID has been registered 
-     * @return 0(Registered), 1(Unregistered) or ERR_ID809
+     * Check if the ID has been registered 
+     * return 0(Registered), 1(Unregistered) or ERR_ID809
      */
     //%block="get Status ID %ID"
     //% weight=93
@@ -266,8 +282,8 @@ namespace custom {
         return state;
     }
     /**
-     * @brief Get the number of registered users 
-     * @return Number of registered users or ERR_ID809
+     * Get the number of registered users 
+     * return Number of registered users or ERR_ID809
      */
     //%block="get enroll count"
     //% weight=92
@@ -289,8 +305,8 @@ namespace custom {
         return ret;
     }
     /**
-     * @brief Save fingerprint 
-     * @param Fingerprint ID
+     * Save fingerprint 
+     * Fingerprint ID
      */
     //%block="store fingerprint %ID"
     //% weight=91
@@ -316,8 +332,8 @@ namespace custom {
         clearReadBuffer();
     }
     /**
-     * @brief Delete fingerprint 
-     * @param Delete ID or DELALL(delete all)
+     * Delete fingerprint 
+     * Delete ID or DELALL(delete all)
      */
     //%block="delete fingerprint %ID"
     //% weight=90
@@ -361,11 +377,11 @@ namespace custom {
         let cks = getCmdCKS(len);
         header[24]=cks&0xff;
         header[25]=cks>>8;
-        
+        /*
         serial.writeString("header1:")
         for(let i=0;i<26;i++){
             serial.writeNumber(header[i]);
-        }
+        }*/
     }
 
     function getCmdCKS(len:number):number{
@@ -420,11 +436,11 @@ namespace custom {
         let ret=(header[8]|header[9]<<8)&0xff
         //serial.writeString("ret:")
         //serial.writeNumber(ret);
-        
+        /*
         serial.writeString("header2:")
         for(let i=0; i<26;i++){
             serial.writeNumber(header[i]);
-        }
+        }*/
         _error = ret;
         
             if(ret != ERR_SUCCESS){
