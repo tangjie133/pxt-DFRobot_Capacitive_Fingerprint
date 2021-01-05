@@ -1,21 +1,17 @@
 {
     "name": "CapacitiveFingerprint",
-    "version": "0.1.1",
-    "description": "",
     "dependencies": {
         "core": "*",
-        "radio": "*",
         "microphone": "*"
     },
     "files": [
+        "DFRobotCapacitiveFingerprint.ts",
+        "README.md",
+        "_locales/zh-cn/CapacitiveFingerprint-strings.json",
         "main.blocks",
         "main.ts",
-        "README.md",
-        "DFRobotCapacitiveFingerprint.ts",
-		"_locales/zh-cn/CapacitiveFingerprint-strings.json",
-    ],
-    "testFiles": [
-        "test.ts"
+        "test.ts",
+        "tsconfig.json"
     ],
     "targetVersions": {
         "target": "3.1.46",
