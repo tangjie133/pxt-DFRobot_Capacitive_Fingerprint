@@ -4,7 +4,7 @@ enum COLOR{
     eLEDGreen = 1,   //green 
     //%block="red"
     eLEDRed,         //red 
-    //%blcok="yellow"
+    //%block="yellow"
     eLEDYellow,      //yellow
     //%block="blue"
     eLEDBlue,        //blue
