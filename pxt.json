@@ -11,7 +11,8 @@
         "main.blocks",
         "main.ts",
         "README.md",
-        "DFRobotCapacitiveFingerprint.ts"
+        "DFRobotCapacitiveFingerprint.ts",
+		"_locales/zh-cn/CapacitiveFingerprint-strings.json",
     ],
     "testFiles": [
         "test.ts"
