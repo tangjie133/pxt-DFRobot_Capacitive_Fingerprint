@@ -1,12 +1,12 @@
 
 enum COLOR{
-    //block="green"
+    //%block="green"
     eLEDGreen = 1,   //green 
-    //block="red"
+    //%block="red"
     eLEDRed,         //red 
-    //blcok="yellow"
+    //%blcok="yellow"
     eLEDYellow,      //yellow
-    //block="blue"
+    //%block="blue"
     eLEDBlue,        //blue
     //%block="cyan"
     eLEDCyan,        //cyan
@@ -86,6 +86,7 @@ namespace custom {
      * blink Count: 00 represents blinking all the time
      * parameter will only be valid in mode eBreathing, eFastBlink, eSlowBlink
      * return 0(succeed) or ERR_ID809
+     * @param data  , eg: 1
      */
     //%block="ctrl LED color %color mode %mode count %data"
     //% weight=99
@@ -132,6 +133,7 @@ namespace custom {
     }
     /**
      * Fingerprint acquisition 
+     * @param timeout  , eg: 10
      */
     //%block="collection Fingerprint timeout %timeout (s)"
     //% weight=97
@@ -217,6 +219,8 @@ namespace custom {
     /**
      * Match the fingerprint with specific fingerprint 
      * return Successfully matched fingerprint ID, 0(Matching failed) or ERR_ID809
+     * @param ID  , eg: 1
+     * 
      */
     //%block="verify ID %ID"
     //% weight=95
@@ -272,6 +276,7 @@ namespace custom {
     /**
      * Check if the ID has been registered 
      * return 0(Registered), 1(Unregistered) or ERR_ID809
+     * @param ID  , eg: 1
      */
     //%block="get Status ID %ID"
     //% weight=93
@@ -320,7 +325,7 @@ namespace custom {
     }
     /**
      * Save fingerprint 
-     * Fingerprint ID
+     * @param ID  , eg: 1
      */
     //%block="store fingerprint %ID"
     //% weight=91
@@ -347,7 +352,7 @@ namespace custom {
     }
     /**
      * Delete fingerprint 
-     * Delete ID or DELALL(delete all)
+     * @param ID  , eg: 1
      */
     //%block="delete fingerprint %ID"
     //% weight=90
