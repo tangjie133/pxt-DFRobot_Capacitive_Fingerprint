@@ -1,31 +1,74 @@
+# HuskyLens
 
-> 在 [https://tangjie133.github.io/pxt-dfrobot_capacitive_fingerprint/](https://tangjie133.github.io/pxt-dfrobot_capacitive_fingerprint/) 打开此页面
+[This capacitive fingerprint sensor supports fingerprint capture, image processing, fingerprint storage, fingerprint comparison and so on. Taking ID809 high-performance processor and semiconductor fingerprint sensor as the core, the sensor adopts built-in IDfinger6.0 algorithm, which can complete all fingerprint identification work independently.](https://www.dfrobot.com/product-2165.html)
+## Basic usage
 
-## 用作扩展
+* HuskyLens Init I2C and select pattern.
 
-此仓库可以作为 **插件** 添加到 MakeCode 中。
+```blocks
 
-* 打开 [https://makecode.microbit.org/](https://makecode.microbit.org/)
-* 点击 **新项目**
-* 点击齿轮图标菜单下的 **扩展**
-* 搜索 **https://github.com/tangjie133/pxt-dfrobot_capacitive_fingerprint** 并导入
+    huskylens.initI2c()
+    huskylens.initMode(protocolAlgorithm.ALGORITHM_FACE_RECOGNITION)
 
-## 编辑此项目 ![构建状态标志](https://github.com/tangjie133/pxt-dfrobot_capacitive_fingerprint/workflows/MakeCode/badge.svg)
+```
 
-在 MakeCode 中编辑此仓库。
+* HuskyLens requests the data and stores the requested data in the result for later use.
 
-* 打开 [https://makecode.microbit.org/](https://makecode.microbit.org/)
-* 点击 **导入**，然后点击 **导入 URL**
-* 粘贴 **https://github.com/tangjie133/pxt-dfrobot_capacitive_fingerprint** 并点击导入
+```blocks
 
-## 积木块预览
+    basic.forever(function () {
+        huskylens.request()
+    })
 
-此图像显示主分支中最后一次提交的块代码。
-此图像可能需要几分钟才能刷新。
+```
 
-![块的渲染视图](https://github.com/tangjie133/pxt-dfrobot_capacitive_fingerprint/raw/master/.github/makecode/blocks.png)
+* HuskyLens retrieves the desired result from the result (For example, get the X center of the ID1 box).
 
-#### 元数据（用于搜索、渲染）
+```blocks
+
+    huskylens.initI2c()
+    huskylens.initMode(protocolAlgorithm.ALGORITHM_FACE_RECOGNITION)
+    basic.forever(function () {
+        huskylens.request()
+        if (huskylens.isLearned(1)) {
+            if (huskylens.isAppear(1, HUSKYLENSResultType_t.HUSKYLENSResultBlock)) {
+                serial.writeValue("box", huskylens.readeBox(1, Content1.xCenter))
+            }
+        }
+    })
+
+```
+
+* HuskyLens retrieves the parameters of the center box on the screen from the result.
+
+```blocks
+
+    huskylens.initI2c()
+    huskylens.initMode(protocolAlgorithm.ALGORITHM_FACE_RECOGNITION)
+    basic.forever(function () {
+        huskylens.request()
+        serial.writeValue("box", huskylens.readBox_s(Content3.ID))
+    })
+
+```
+
+* HuskyLens gets the parameters of the Nth box from the result.
+
+```blocks
+    huskylens.initI2c()
+    huskylens.initMode(protocolAlgorithm.ALGORITHM_FACE_RECOGNITION)
+    basic.forever(function () {
+        huskylens.request()
+        serial.writeValue("box", huskylens.readBox_ss(1, Content3.ID))
+    })
+
+```
+## License
+
+MIT
+
+Copyright (c) 2020, microbit/micropython Chinese community  
+
+## Supported targets
 
 * for PXT/microbit
-<script src="https://makecode.com/gh-pages-embed.js"></script><script>makeCodeRender("{{ site.makecode.home_url }}", "{{ site.github.owner_name }}/{{ site.github.repository_name }}");</script>
