@@ -1,20 +1,34 @@
 
 enum COLOR{
+    //block="green"
     eLEDGreen = 1,   //green 
+    //block="red"
     eLEDRed,         //red 
+    //blcok="yellow"
     eLEDYellow,      //yellow
+    //block="blue"
     eLEDBlue,        //blue
+    //%block="cyan"
     eLEDCyan,        //cyan
+    //%block="magenta"
     eLEDMagenta,     //magenta
+    //%block="white"
     eLEDWhite        //white
 }
 enum MODE{
+    //%block="Breathing"
     eBreathing = 1,  //Breathing 
+    //%block="FastBlink"
     eFastBlink,      //Quick blink
+    //%block="KeepsOn"
     eKeepsOn,        //On
+    //%block="NormalClose"
     eNormalClose,    //Off
+    //%block="FadeIn"
     eFadeIn,         //Fade in 
+    //%block="FadeOut"
     eFadeOut,        //Fade out
+    //%block="SlowBlink"
     eSlowBlink       //Slow blink
 }
 
