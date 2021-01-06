@@ -46,7 +46,7 @@ namespace custom {
     const CMD_FINGER_DETECT=0x0021
     const CMD_GET_IMAGE=0x0020
     const CMD_GENERATE=0x0060
-    const FINGERPRINT_CAPACITY=80
+    const FINGERPRINT_CAPACITY=0x50
     const CMD_SEARCH=0x0063
     const CMD_VERIFY=0x0064
     const CMD_GET_EMPTY_ID=0x0045
@@ -153,7 +153,7 @@ namespace custom {
                     return;
                 }
             }
-            serial.writeString("okokoko:")
+            //serial.writeString("okokoko:")
             if(state != 1){
                 ret=getImage();
                 //serial.writeString("stat1:")
@@ -175,10 +175,12 @@ namespace custom {
                     continue;
                 }
                 _number++;
+                /*
                 if(_initState < 3){
                     _initState++;
                     ctrlLED(COLOR.eLEDGreen, MODE.eFastBlink, 1)
-                }
+                }*/
+                ctrlLED(COLOR.eLEDGreen, MODE.eFastBlink, 1)
                 _state=1;
                 return;
             }
@@ -264,7 +266,7 @@ namespace custom {
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(460);
+        basic.pause(100);
         let ret = responsePayload(CMD_GET_EMPTY_ID);
         if(ret == ERR_SUCCESS){
             ret=header[10];
@@ -282,18 +284,19 @@ namespace custom {
     //% weight=93
     export function getStatusID(ID:number):boolean{
         let state=false;
+        _number=0
         let buf=pins.createBuffer(2)
         buf[0]=ID;
         pack(CMD_GET_STATUS,buf,2);
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
         clearHeader();
-        basic.pause(50);
+        basic.pause(360);
         let ret = responsePayload(CMD_GET_STATUS);
         if(ret == ERR_SUCCESS){
             ret=header[10];
         }
-        if(ret == 0){
+        if(ret == 1){
             state=true;
         }
         clearHeader();
@@ -396,11 +399,11 @@ namespace custom {
         let cks = getCmdCKS(len);
         header[24]=cks&0xff;
         header[25]=cks>>8;
-        /*
+        
         serial.writeString("header1:")
         for(let i=0;i<26;i++){
             serial.writeNumber(header[i]);
-        }*/
+        }
     }
 
     function getCmdCKS(len:number):number{
@@ -455,11 +458,11 @@ namespace custom {
         let ret=(header[8]|header[9]<<8)&0xff
         //serial.writeString("ret:")
         //serial.writeNumber(ret);
-        /*
+        
         serial.writeString("header2:")
         for(let i=0; i<26;i++){
             serial.writeNumber(header[i]);
-        }*/
+        }
         _error = ret;
         
             if(ret != ERR_SUCCESS){

@@ -11,8 +11,10 @@
         "_locales/zh-cn/CapacitiveFingerprint-strings.json",
         "main.blocks",
         "main.ts",
-        "test.ts",
         "tsconfig.json"
+    ],
+    "testFiles": [
+        "test.ts"
     ],
     "targetVersions": {
         "target": "3.1.46",
