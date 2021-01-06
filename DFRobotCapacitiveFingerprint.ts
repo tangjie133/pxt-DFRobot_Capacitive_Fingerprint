@@ -359,14 +359,12 @@ namespace custom {
     //% weight=90
     export function delFingerprint(ID:number):void{
         let buf=pins.createBuffer(4)
-        if(ID==DELALL){
+        if(ID==0){
             buf[0]=1;
             buf[2]=FINGERPRINT_CAPACITY;
         }else{
             buf[0]=buf[2]=ID;
         }
-        buf[0]=1;
-        buf[2]=FINGERPRINT_CAPACITY;
         pack(CMD_DEL_CHAR,buf,4);
         let Buffer = pins.createBufferFromArray(header);
         pins.i2cWriteBuffer(Addr, Buffer);
@@ -442,7 +440,7 @@ namespace custom {
             }
         }
         if(nType ==1){
-            serial.writeString("--recv timeout--")
+            //serial.writeString("--recv timeout--")
             _error = 70;
             return ERR_ID809;
         }
@@ -514,7 +512,7 @@ namespace custom {
                     state = RECV_HEADER_A5;
                 }
                 if(input.runningTimeMicros() - curr > 2000) {
-                    serial.writeString("----------!!!!!!!!!recv timeout----------");
+                    //serial.writeString("----------!!!!!!!!!recv timeout----------");
                     return 1;
                 }  
             }

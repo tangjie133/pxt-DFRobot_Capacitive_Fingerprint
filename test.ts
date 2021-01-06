@@ -3,7 +3,7 @@ input.onButtonPressed(Button.A, function () {
 })
 let ID = 0
 custom.isConnected()
-custom.delFingerprint(80)
+custom.delFingerprint(0)
 custom.ctrlLED(COLOR.eLEDYellow, MODE.eFastBlink, 2)
 custom.collectionFingerprint(10)
 custom.collectionFingerprint(10)
