@@ -175,12 +175,10 @@ namespace custom {
                     continue;
                 }
                 _number++;
-                /*
                 if(_initState < 3){
                     _initState++;
                     ctrlLED(COLOR.eLEDGreen, MODE.eFastBlink, 1)
-                }*/
-                ctrlLED(COLOR.eLEDGreen, MODE.eFastBlink, 1)
+                }
                 _state=1;
                 return;
             }
@@ -399,11 +397,11 @@ namespace custom {
         let cks = getCmdCKS(len);
         header[24]=cks&0xff;
         header[25]=cks>>8;
-        
+        /*
         serial.writeString("header1:")
         for(let i=0;i<26;i++){
             serial.writeNumber(header[i]);
-        }
+        }*/
     }
 
     function getCmdCKS(len:number):number{
@@ -458,11 +456,11 @@ namespace custom {
         let ret=(header[8]|header[9]<<8)&0xff
         //serial.writeString("ret:")
         //serial.writeNumber(ret);
-        
+        /*
         serial.writeString("header2:")
         for(let i=0; i<26;i++){
             serial.writeNumber(header[i]);
-        }
+        }*/
         _error = ret;
         
             if(ret != ERR_SUCCESS){
