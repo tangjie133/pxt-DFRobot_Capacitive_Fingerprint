@@ -238,7 +238,7 @@ namespace custom {
             let ret = responsePayload(CMD_VERIFY);
             if(ret == ERR_SUCCESS){
                 ret=header[10];
-                serial.writeNumber(ret)
+                //serial.writeNumber(ret)
             }
             if(ret==ID){
                 state=true;
