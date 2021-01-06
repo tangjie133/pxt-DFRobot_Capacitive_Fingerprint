@@ -359,6 +359,7 @@ namespace custom {
     //% weight=90
     export function delFingerprint(ID:number):void{
         let buf=pins.createBuffer(4)
+        _number=0
         if(ID==0){
             buf[0]=1;
             buf[2]=FINGERPRINT_CAPACITY;
